@@ -1,6 +1,7 @@
 from flask import Flask
-from flask import render_template
+from flask import render_template, request
 
+users = ['mike', 'mishel', 'adel', 'keks', 'kamila']
 
 # Это callable WSGI-приложение
 app = Flask(__name__)
@@ -9,14 +10,22 @@ app = Flask(__name__)
 def hello_world():
     return 'Hello again from Flask!'
 
-@app.get('/users')
-def users_get():
-    return 'GET /users'
 
+@app.route('/users')
+def users_index():
 
-@app.post('/users')
-def users():
-    return 'Users', 302
+    term = request.args.get('term', default=None)
+    if term is None:
+        filtered_users = users
+        term = ''
+    else:
+        filtered_users = [u for u in users if term in u]
+
+    return render_template(
+        '/users/index.html',
+        users=filtered_users,
+        search=term
+    )
 
 
 @app.route('/users/<id>')
@@ -25,6 +34,7 @@ def users_html(id):
         '/users/show.html',
         name=id,
     )
+
 
 @app.route('/courses/<id>')
 def courses(id):
