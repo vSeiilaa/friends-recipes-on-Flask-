@@ -4,18 +4,21 @@
         <title>List of users</title>
     </head>
     <body>
+        <a href="{{ url_for('users_new') }}" >Create new user <br> </a>
         <form action="/users" method="get">
             <input type="search" name="term" value="{{ search }}" />
             <input type="submit" value="Search" />
           </form>
         
-        <table>
+            <ul>
         {% for user in users %}
-            <tr>
-                <td><b> {{ user }} </b> </td>
-            </tr>
+        <li>
+            <a href="{{ url_for('user_html', id=user.id) }}">
+              {{ user.id }}</a>. {{ user.name }}, {{ user.email }}
+        </li>
+          
         {% endfor %}
-        </table>
+            </ul>
 
     </body>
 </html>
