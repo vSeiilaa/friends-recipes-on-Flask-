@@ -1,0 +1,27 @@
+<!-- templates/users/new.html -->
+<!doctype html>
+<html>
+  <head>
+    <title>Let's create a new user</title>
+    <h1> New user </h1>
+  </head>
+  <body>
+<form action="/users" method="post">
+    <div>
+      <label>
+        Nickname
+        <input type="text" name="name" value="{{ user.name }}">
+      </label>
+    </div>
+    <div>
+      <label>
+        Email
+        <input type="email" required name="email" value="{{ user.email }}">
+      </label>
+    </div>
+  
+    <input type="submit" value="Submit">
+  </form>
+    </body>
+  </html>
+  
