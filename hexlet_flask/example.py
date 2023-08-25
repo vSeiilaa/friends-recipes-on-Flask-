@@ -11,7 +11,7 @@ def hello_world():
 
 
 @app.get('/users')
-def users_index():
+def get_users():
     search_word = request.args.get('term', default=None)
 
     with open('users.txt', 'r') as repo:
@@ -27,32 +27,43 @@ def users_index():
 
 
 @app.get('/users/<id>')
-def user_html(id):
-    return render_template(
-        '/users/show.html',
-        name=id,
-    )
+def get_user(id):
+    with open('users.txt', 'r') as repo:
+        users = [json.loads(r) for r in repo.readlines()]
+        for user in users:
+            if int(user['id']) == int(id):
+                return render_template(
+                '/users/show.html',
+                user=user
+                )
+        return render_template('404.html'), 404
 
 
 @app.post('/users/')
-def user_post():
+def post_user():
     with open('users.txt', 'a') as repo:
         user = request.form.to_dict()
-        user['id'] = user_id('users.txt')
+        user['id'] = generate_user_id('users.txt')
         repo.write(json.dumps(user))
         repo.write("\n")
-        return redirect(url_for('users_index'), code=302)
+        return redirect(url_for('get_users'), code=302)
     
 
 @app.get('/users/new')
-def users_new():
-    new_user = {'name': '', 'email': ''}
+def create_user():
+    user = {'name': '', 'email': ''}
 
     return render_template(
         'users/new_user.html',
-        user=new_user)
+        user=user)
 
-def user_id(file):
+@app.errorhandler(404)
+# inbuilt function which takes error as parameter
+def not_found(e):
+  return render_template("404.html")
+
+
+def generate_user_id(file):
     with open(file, 'r') as repo:
         try:
             return json.loads(repo.readlines()[-1])['id'] + 1
