@@ -12,19 +12,12 @@ def hello_world():
 
 @app.get('/users')
 def users_index():
+    search_word = request.args.get('term', default=None)
+
     with open('users.txt', 'r') as repo:
         users = [json.loads(r) for r in repo.readlines()]
 
-        search_word = request.args.get('term', default=None)
-        if search_word is None:
-            filtered_users = users
-            search_word = ''
-        else:
-            filtered_users = [
-                u for u in users if 
-                (search_word.lower() in u['name'].lower() or 
-                 search_word.lower() in u['email'].lower())
-                 ]
+        filtered_users, search_word = user_search(users, search_word)
 
         return render_template(
             '/users/index.html',
@@ -65,3 +58,16 @@ def user_id(file):
             return json.loads(repo.readlines()[-1])['id'] + 1
         except IndexError:
             return 0
+        
+def user_search(users, search_word):
+    search_word = request.args.get('term', default=None)
+    if search_word is None:
+        filtered_users = users
+        search_word = ''
+    else:
+        filtered_users = [
+            u for u in users if 
+            (search_word.lower() in u['name'].lower() or 
+             search_word.lower() in u['email'].lower())
+             ]
+    return filtered_users, search_word
