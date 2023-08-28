@@ -1,9 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request 
+from flask import redirect, url_for, flash, get_flashed_messages
 import json
 
 
 # Это callable WSGI-приложение
 app = Flask(__name__)
+
+app.secret_key = "secret_key"
+
 
 @app.route('/')
 def hello_world():
@@ -18,11 +22,14 @@ def get_users():
         users = [json.loads(r) for r in repo.readlines()]
 
         filtered_users, search_word = user_search(users, search_word)
+        messages = get_flashed_messages(with_categories=True)
+        print(messages)
 
         return render_template(
             '/users/index.html',
             users=filtered_users,
-            search=search_word
+            search=search_word,
+            messages=messages
         )
 
 
@@ -43,19 +50,32 @@ def get_user(id):
 def post_user():
     with open('users.txt', 'a') as repo:
         user = request.form.to_dict()
+
+        errors = validate(user)
+
+        if errors:
+            return render_template(
+                'users/new_user.html',
+            user=user,
+            errors=errors
+            ), 422
+
         user['id'] = generate_user_id('users.txt')
         repo.write(json.dumps(user))
         repo.write("\n")
+        flash('User has been created', 'success')
+
         return redirect(url_for('get_users'), code=302)
     
 
 @app.get('/users/new')
 def create_user():
     user = {'name': '', 'email': ''}
-
+    errors = []
     return render_template(
         'users/new_user.html',
-        user=user)
+        user=user,
+        errors=errors)
 
 @app.errorhandler(404)
 # inbuilt function which takes error as parameter
@@ -82,3 +102,13 @@ def user_search(users, search_word):
              search_word.lower() in u['email'].lower())
              ]
     return filtered_users, search_word
+
+def validate(data):
+    errors = {}
+    if len(data['name']) < 2:
+        errors['name'] = 'Name is too short!'
+    if '@' not in data['email']:
+        errors['email'] = 'Invalid email format!'
+
+    return errors 
+

@@ -12,12 +12,18 @@
         Nickname
         <input type="text" name="name" value="{{ user.name }}">
       </label>
+      {% if errors %}
+        <div>{{ errors.name }}</div>
+      {% endif %}
     </div>
     <div>
       <label>
         Email
-        <input type="email" required name="email" value="{{ user.email }}">
+        <input type="text" required name="email" value="{{ user.email }}">
       </label>
+      {% if errors %}
+        <div>{{ errors.email }}</div>
+      {% endif %}
     </div>
   
     <input type="submit" value="Submit">
