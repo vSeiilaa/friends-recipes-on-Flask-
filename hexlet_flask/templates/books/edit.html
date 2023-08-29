@@ -1,0 +1,23 @@
+<form action="{{ url_for('patch_book', id=book.id) }}" method="post">
+    <div>
+      <label>
+          Updated book title
+          <input type="text" name="name" value="{{ book.name }}">
+      </label>
+      {% if errors %}
+          <div>{{ errors.name }}</div>
+      {% endif %}
+    </div>
+
+    <div>
+        <label>
+          Updated summary
+          <input type="text" required name="summary" value="{{ book.summary }}">
+        </label>
+        {% if errors %}
+          <div>{{ errors.summary }}</div>
+        {% endif %}
+      </div>
+
+    <input type="submit" value="Update">
+</form>
