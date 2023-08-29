@@ -1,16 +1,15 @@
-<!-- templates/users/new.html -->
 <!doctype html>
 <html>
   <head>
-    <title>Let's create a new user</title>
-    <h1> New user </h1>
+    <title>Let's create a new book</title>
+    <h1>What this book was about? </h1>
   </head>
   <body>
-<form action="/users" method="post">
+<form action="/books" method="post">
     <div>
       <label>
-        Nickname
-        <input type="text" name="name" value="{{ user.name }}">
+        Book title
+        <input type="text" name="name" value="{{ book.name }}">
       </label>
       {% if errors %}
         <div>{{ errors.name }}</div>
@@ -18,11 +17,11 @@
     </div>
     <div>
       <label>
-        Email
-        <input type="text" required name="email" value="{{ user.email }}">
+        Summary
+        <input type="text" required name="summary" value="{{ book.summary }}">
       </label>
       {% if errors %}
-        <div>{{ errors.email }}</div>
+        <div>{{ errors.summary }}</div>
       {% endif %}
     </div>
   
