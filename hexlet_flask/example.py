@@ -10,8 +10,8 @@ app.secret_key = "secret_key"
 
 
 @app.route('/')
-def hello_world():
-    return 'Hello again from Flask!'
+def route():
+    return render_template('index.html')
 
 
 @app.get('/users')
