@@ -5,7 +5,6 @@ import json
 
 # Это callable WSGI-приложение
 app = Flask(__name__)
-
 app.secret_key = "secret_key"
 
 
@@ -37,9 +36,9 @@ def books_get():
 def book_get(id):
     with open('books.txt', 'r') as repo:
         books = [json.loads(r) for r in repo.readlines()]
-        for book in books:
-            if int(book['id']) == int(id):
-                return render_template(
+        book = find(id, books)
+        if book:
+            return render_template(
                 '/books/show.html',
                 book=book
                 )
@@ -78,6 +77,44 @@ def book_create():
         errors=errors)
 
 
+@app.get('/books/<id>/edit')
+def edit_book(id):
+    with open('books.txt', 'r') as repo:
+        books = [json.loads(r) for r in repo.readlines()]
+        errors = []
+        book = find(id, books)
+        if book:
+            return render_template(
+                '/books/edit.html',
+                book=book,
+                errors=errors
+                )
+        return render_template('404.html'), 404
+
+
+@app.post('/books/<id>/patch')
+def patch_book(id):
+    data = request.form.to_dict()
+    errors = validate(data)
+
+    if errors:
+        with open('books.txt', 'r') as repo:
+            books = [json.loads(r) for r in repo.readlines()]
+            book = find(id, books)
+
+            return render_template(
+                'schools/edit.html',
+                book=book,
+                errors=errors,
+                ), 422
+        
+
+    replace_line('books.txt', id, data)
+
+    flash('Book has been successfully updated!', 'success')
+
+    return redirect(url_for('books_get'))
+
 @app.errorhandler(404)
 def not_found(e):
   return render_template("404.html")
@@ -90,6 +127,7 @@ def generate_id(file):
         except IndexError:
             return 0
         
+
 def search(data, search_word):
     search_word = request.args.get('term', default=None)
     if search_word is None:
@@ -103,8 +141,10 @@ def search(data, search_word):
              ]
     return filtered_data, search_word
 
+
 def validate(data):
     errors = {}
+    print(data)
     if len(data['name']) < 2:
         errors['name'] = 'Name is too short!'
     if len(data['summary']) == 0:
@@ -112,3 +152,22 @@ def validate(data):
 
     return errors 
 
+def find(id, data):
+    for d in data:
+        if int(d['id']) == int(id):
+            return d
+    return False
+
+def replace_line(file, id, new_content):
+    # temporary function for editing the content in txt file by 
+    # overwriting the entire file.
+    # To be replaced with the proper database
+    id = int(id)
+    new_content['id'] = id
+    
+    repo = open(file, 'r').readlines()
+    
+    repo[id] = json.dumps(new_content)
+    out = open(file, 'w')
+    out.writelines(repo)
+    out.close()
