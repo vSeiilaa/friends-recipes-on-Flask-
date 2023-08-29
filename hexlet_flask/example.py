@@ -116,12 +116,16 @@ def book_patch(id):
     return redirect(url_for('books_get'))
 
 
-@app.post('/school/<id>/delete')
-def delete_school(id):
-    repo = SchoolRepository()
-    repo.destroy(id)
-    flash('School has been deleted', 'success')
-    return redirect(url_for('schools'))
+@app.post('/books/<id>/delete')
+def book_delete(id):
+
+    with open('books.txt') as old, open('books.txt', 'w') as new:
+        lines = old.readlines()
+        new.writelines(lines[0:int(id)])
+        new.writelines(lines[int(id)+1:])
+
+        flash('Book has been deleted', 'success')
+        return redirect(url_for('books_get'))
 
 
 @app.errorhandler(404)
