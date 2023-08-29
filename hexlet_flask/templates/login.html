@@ -1,0 +1,30 @@
+<div>
+<head>
+    <title>Login form</title>
+</head>
+    {% if messages %}
+    <ul>
+      {% for category, message in messages %}
+      <li class="{{ category }}">{{ message }}</li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+    {% if current_user %}
+    <h1>Hello, {{ current_user['name'] }}!</h1>
+
+    {% else %}
+    <form action="/session/new" method="post">
+        <label>
+            Enter your name
+            <input type="text" required name="name" value="">
+        </label>
+        <br>
+        <label>
+            Enter the password
+        <input type="password" required name="password" value="">
+        </label>
+
+        <input type="submit" value="Sign In">
+    </form>
+    {% endif %}
+</div>

@@ -6,10 +6,25 @@
   <body>
     <h1>Hey there</h1>
     <h2>Welcome to my first Flask project!</h2>
+
+    {% include "login.html" %}
+    
+    {% if current_user %}
     <b>You can find the list of books in my library using the link below:<br></b>
-    <a href="{{ url_for('books_get') }}">Books <br></a>
+    <a href="{{ url_for('books_get') }}">Books </a>
+    <br>
     <img src="https://i.pinimg.com/originals/65/dc/ab/65dcab873ddc77dd4ef9f5893e98efec.jpg" 
     alt="Smart Power" width='150', height='150'>
+    {% endif %}
 
-  </body>
+  <div>
+    <br>
+    <b> And if you want to sign out, use this button below</b>
+    <br>
+    <form action="/session/delete" method="post">
+      <input type="submit" value="Sign Out">
+  </form>
+  </div>
+
+</body>
 </html>

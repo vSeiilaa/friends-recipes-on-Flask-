@@ -1,16 +1,24 @@
-from flask import Flask, render_template, request 
+from flask import Flask, render_template, request, session 
 from flask import redirect, url_for, flash, get_flashed_messages
 import json
+from hashlib import sha256
+import os
 
 
 # Это callable WSGI-приложение
 app = Flask(__name__)
-app.secret_key = "secret_key"
+app.config['SECRET_KEY'] = 'Secret'
 
 
 @app.route('/')
 def route():
-    return render_template('index.html')
+    messages = get_flashed_messages(with_categories=True)
+    current_user = session.get('user')
+    return render_template(
+        'index.html',
+        messages=messages,
+        current_user=current_user,
+        )
 
 
 @app.get('/books')
@@ -119,13 +127,34 @@ def book_patch(id):
 @app.post('/books/<id>/delete')
 def book_delete(id):
 
-    with open('books.txt') as old, open('books.txt', 'w') as new:
+    with open('books.txt', 'r') as old, open('books.txt', 'w') as new:
         lines = old.readlines()
         new.writelines(lines[0:int(id)])
         new.writelines(lines[int(id)+1:])
 
         flash('Book has been deleted', 'success')
         return redirect(url_for('books_get'))
+
+
+@app.post('/session/new')
+def new_session():
+    data = request.form.to_dict()
+    with open('users.txt', 'r') as repo:
+        users = [json.loads(r) for r in repo.readlines()]
+        user = get_user(data, users)
+
+        if user:
+            session['user'] = user
+            return redirect(url_for('route'))
+        else:
+            flash('Wrong password or name.')
+            return redirect(url_for('route'))
+
+
+@app.route('/session/delete', methods=['DELETE', 'POST'])
+def delete_session():
+    session.clear()
+    return redirect(url_for('route'))
 
 
 @app.errorhandler(404)
@@ -184,3 +213,11 @@ def replace_line(file, id, new_content):
     out = open(file, 'w')
     out.writelines(repo)
     out.close()
+
+
+def get_user(form_data, repo):
+    name = form_data['name']
+    password = sha256(form_data['password'].encode()).hexdigest()
+    for user in repo:
+        if user['name'] == name and user['password'] == password:
+            return user
