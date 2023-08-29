@@ -78,7 +78,7 @@ def book_create():
 
 
 @app.get('/books/<id>/edit')
-def edit_book(id):
+def book_edit(id):
     with open('books.txt', 'r') as repo:
         books = [json.loads(r) for r in repo.readlines()]
         errors = []
@@ -93,7 +93,7 @@ def edit_book(id):
 
 
 @app.post('/books/<id>/patch')
-def patch_book(id):
+def book_patch(id):
     data = request.form.to_dict()
     errors = validate(data)
 
@@ -114,6 +114,15 @@ def patch_book(id):
     flash('Book has been successfully updated!', 'success')
 
     return redirect(url_for('books_get'))
+
+
+@app.post('/school/<id>/delete')
+def delete_school(id):
+    repo = SchoolRepository()
+    repo.destroy(id)
+    flash('School has been deleted', 'success')
+    return redirect(url_for('schools'))
+
 
 @app.errorhandler(404)
 def not_found(e):
@@ -166,7 +175,7 @@ def replace_line(file, id, new_content):
     new_content['id'] = id
     
     repo = open(file, 'r').readlines()
-    
+
     repo[id] = json.dumps(new_content)
     out = open(file, 'w')
     out.writelines(repo)
