@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+    <title>Let's register you in the reading list!</title>
+    <h1>Let's register you in the reading list!</h1>
+</head>
+    <body>
+<form action="/users" method="post">
+    <div>
+    <label>
+        Your name
+        <input type="text" required name="name" value="{{ user.name }}">
+    </label>
+    {% if errors %}
+        <div>{{ errors.name }}</div>
+    {% endif %}
+    </div>
+    <div>
+    <label>
+        Password
+        <input type="text" required name="password" value="{{ user.password }}">
+    </label>
+    {% if errors %}
+        <div>{{ errors.password }}</div>
+    {% endif %}
+    </div>
+
+    <input type="submit" value="Submit">
+</form>
+</body>
+</html>
