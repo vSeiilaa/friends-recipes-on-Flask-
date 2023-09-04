@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, session
 from flask import redirect, url_for, flash, get_flashed_messages
 import json
 from hashlib import sha256
-import os
+import fileinput
 
 
 # Это callable WSGI-приложение
@@ -24,11 +24,13 @@ def route():
 @app.get('/books')
 def books_get():
     search_word = request.args.get('term', default=None)
+    current_user = session.get('user')
 
     with open('books.txt', 'r') as repo:
         books = [json.loads(r) for r in repo.readlines()]
-
-        filtered_books, search_word = search(books, search_word)
+        user_books = [b for b in books if b['user']==current_user['id']]
+        
+        filtered_books, search_word = search(user_books, search_word)
         messages = get_flashed_messages(with_categories=True)
         print(messages)
 
@@ -55,6 +57,8 @@ def book_get(id):
 
 @app.post('/books/')
 def book_post():
+    current_user = session.get('user')
+
     with open('books.txt', 'a') as repo:
         book = request.form.to_dict()
 
@@ -68,6 +72,7 @@ def book_post():
             ), 422
 
         book['id'] = generate_id('books.txt') # type: ignore
+        book['user'] = current_user['id']
         repo.write(json.dumps(book))
         repo.write("\n")
         flash('Book has been added', 'success')
@@ -102,6 +107,7 @@ def book_edit(id):
 
 @app.post('/books/<id>/patch')
 def book_patch(id):
+    current_user = session.get('user')
     data = request.form.to_dict()
     errors = validate(data)
 
@@ -115,8 +121,9 @@ def book_patch(id):
                 book=book,
                 errors=errors,
                 ), 422
-        
-
+    
+    data['id'] = int(id)
+    data['user'] = current_user['id']
     replace_line('books.txt', id, data)
 
     flash('Book has been successfully updated!', 'success')
@@ -126,14 +133,10 @@ def book_patch(id):
 
 @app.post('/books/<id>/delete')
 def book_delete(id):
+    replace_line('books.txt', id, None)
 
-    with open('books.txt', 'r') as old, open('books.txt', 'w') as new:
-        lines = old.readlines()
-        new.writelines(lines[0:int(id)])
-        new.writelines(lines[int(id)+1:])
-
-        flash('Book has been deleted', 'success')
-        return redirect(url_for('books_get'))
+    flash('Book has been deleted', 'success')
+    return redirect(url_for('books_get'))
 
 
 @app.post('/session/new')
@@ -151,6 +154,39 @@ def new_session():
             return redirect(url_for('route'))
 
 
+@app.post('/users/')
+def users_post():
+    with open('users.txt', 'a') as repo:
+        user = request.form.to_dict()
+
+        errors = validate(user)
+
+        if errors:
+            return render_template(
+                '/new_user.html',
+            user=user,
+            errors=errors
+            ), 422
+
+        user['id'] = generate_id('users.txt') # type: ignore
+        user['password'] = encode_password(user['password'])
+        repo.write(json.dumps(user))
+        repo.write("\n")
+        flash('Congrats on creating a user profile!', 'success')
+
+        return redirect(url_for('route'), code=302)
+    
+
+@app.get('/users/')
+def user_create():
+    user = {'name': '', 'password': ''}
+    errors = []
+    return render_template(
+        '/new_user.html',
+        user=user,
+        errors=errors)
+
+
 @app.route('/session/delete', methods=['DELETE', 'POST'])
 def delete_session():
     session.clear()
@@ -159,7 +195,7 @@ def delete_session():
 
 @app.errorhandler(404)
 def not_found(e):
-  return render_template("404.html")
+    return render_template("404.html")
 
 
 def generate_id(file):
@@ -187,10 +223,13 @@ def search(data, search_word):
 def validate(data):
     errors = {}
     print(data)
-    if len(data['name']) < 2:
-        errors['name'] = 'Name is too short!'
-    if len(data['summary']) == 0:
-        errors['summary'] = "Summary can't be empty!"
+    for key,value in data.items():
+        if len(data[key]) < 2:
+            errors[key] = 'Field is too short!'
+        if len(data[key]) == 0:
+            errors[key] = "Field can't be empty!"
+        if len(data[key]) > 20:
+            errors[key] = "Can't be longer than 20 symbols!"
 
     return errors 
 
@@ -204,20 +243,28 @@ def replace_line(file, id, new_content):
     # temporary function for editing the content in txt file by 
     # overwriting the entire file.
     # To be replaced with the proper database
-    id = int(id)
-    new_content['id'] = id
-    
-    repo = open(file, 'r').readlines()
+    if new_content is not None:
+        with fileinput.input(file, inplace=True) as file:
+            for line in file:
+                if json.loads(line)['id'] == int(id):
+                    print(json.dumps(new_content))
+                else:
+                    print(line.rstrip())
+    else:
+        with fileinput.input(file, inplace=True) as file:
+            for line in file:
+                if json.loads(line.strip())['id'] != int(id):
+                    print(line.rstrip())
+            print("\n")
 
-    repo[id] = json.dumps(new_content)
-    out = open(file, 'w')
-    out.writelines(repo)
-    out.close()
+
+def encode_password(password):
+    return sha256(password.encode()).hexdigest()
 
 
 def get_user(form_data, repo):
     name = form_data['name']
-    password = sha256(form_data['password'].encode()).hexdigest()
+    password = encode_password(form_data['password'])
     for user in repo:
         if user['name'] == name and user['password'] == password:
             return user

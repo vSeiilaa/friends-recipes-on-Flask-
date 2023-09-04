@@ -1,30 +1,29 @@
 <!doctype html>
 <html>
   <head>
+  <meta charset="UTF-8">
     <title>First Flask application</title>
   </head>
   <body>
-    <h1>Hey there</h1>
-    <h2>Welcome to my first Flask project!</h2>
+    {% if not current_user %}
+    <h1>Enter the Awesome Reading List &#127752; </h1>
 
     {% include "login.html" %}
-    
-    {% if current_user %}
-    <b>You can find the list of books in my library using the link below:<br></b>
-    <a href="{{ url_for('books_get') }}">Books </a>
-    <br>
+
+    {% else %}
+    <h2>Welcome back {{ current_user['name'] }} &#128075;</h2>
     <img src="https://i.pinimg.com/originals/65/dc/ab/65dcab873ddc77dd4ef9f5893e98efec.jpg" 
     alt="Smart Power" width='150', height='150'>
-    {% endif %}
-
-  <div>
     <br>
-    <b> And if you want to sign out, use this button below</b>
-    <br>
-    <form action="/session/delete" method="post">
-      <input type="submit" value="Sign Out">
-  </form>
-  </div>
+    <b>Check the list of your books in <a href="{{ url_for('books_get') }}">the Library</a> </b>
+      <br>
+      <br>
+      <b> Want to sign out? Press the button below:</b>
+      <form action="/session/delete" method="post">
+        <input type="submit" value="Sign Out">
+      </form>
+  {% endif %}
 
-</body>
+
+  </body>
 </html>

@@ -5,30 +5,31 @@
     </head>
     <body>
         {% if messages %}
-            <ul class=flashes>
-            {% for category, message in messages %}
-                <h3 class="{{ category }}">{{ message }}</h3>
-            {% endfor %}
-            </ul>
-            {% endif %}
-
-        <a href="{{ url_for('book_create') }}" >Create new book <br> </a>
+        <ul class=flashes>
+        {% for category, message in messages %}
+            <h3 class="{{ category }}">{{ message }}</h3>
+        {% endfor %}
+        </ul>
+        {% endif %}
+        <p> <b>Looking for a book? Use the search! </b></p>
+        
         <form action="/books" method="get">
             <input type="search" name="term" value="{{ search }}" />
             <input type="submit" value="Search" />
-          </form>
-        
+        </form>
+        <br>
+        <h3>Your Awesome Reading List &#127752;</h3>
             <ul>
         {% for book in books %}
         <li>
             <a href="{{ url_for('book_get', id=book.id) }}">
-              {{ book.id }}. {{ book.name }} </a>
-              <br> {{ book.summary }}
+                {{ book.name }} </a>
         </li>
-          
         {% endfor %}
             </ul>
-
+    <br>
+    <a href="{{ url_for('book_create') }}" >Add a new book <br> </a>
+    <a href="{{ url_for('route') }}"><p>Click Here</a> to go to the User page</p>
     </body>
 </html>
 
